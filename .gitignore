@@ -1,0 +1,5 @@
+.vscode
+contracts/build
+contracts/cache
+contracts/types
+node_modules

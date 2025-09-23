@@ -1,0 +1,30 @@
+{
+  "name": "fast-withdrawals-poc",
+  "version": "1.0.0",
+  "description": "Proof of concept for enabling fast withdrawals from Hemi to Ethereum using LayerZero",
+  "license": "MIT",
+  "author": "Gonzalo D'Elia <gonzalo@hemi.xyz>",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/hemilabs/fast-withdrawals-poc.git"
+  },
+  "scripts": {
+    "format:check": "prettier --check .",
+    "format:write": "prettier --write .",
+    "prepare": "husky"
+  },
+  "devDependencies": {
+    "@commitlint/cli": "19.8.1",
+    "better-sort-package-json": "1.1.1",
+    "commitlint-config-bloq": "1.1.0",
+    "husky": "9.1.7",
+    "lint-staged": "16.2.0",
+    "prettier": "3.6.2",
+    "prettier-plugin-solidity": "2.1.0"
+  },
+  "workspaces": [
+    "contracts",
+    "packages/*",
+    "website"
+  ]
+}
