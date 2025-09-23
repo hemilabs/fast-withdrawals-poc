@@ -1,5 +1,13 @@
 .vscode
-contracts/build
-contracts/cache
-contracts/types
+
+# Compiler files
+build
+cache/
+out/
+types
+
+# File system
+.DS_store
+
+# node
 node_modules

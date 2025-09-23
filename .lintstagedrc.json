@@ -1,5 +1,4 @@
 {
-  "!(*.{js,md,ts,tsx}|package.json)": ["prettier --ignore-unknown --write"],
-  "*.{js,md,sol,ts,tsx}": ["prettier --write"],
+  "!(package.json)": ["prettier --ignore-unknown --write"],
   "package.json": ["better-sort-package-json", "prettier --write"]
 }
