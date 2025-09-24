@@ -1,8 +1,10 @@
+.env
 .vscode
 
 # Compiler files
 build
 cache/
+deployments
 out/
 types
 

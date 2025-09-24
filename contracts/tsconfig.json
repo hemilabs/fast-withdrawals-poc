@@ -1,0 +1,8 @@
+{
+  "compilerOptions": {
+    "noEmit": true
+  },
+  "extends": "@tsconfig/node24/tsconfig.json",
+  "include": ["scripts/**/*"],
+  "exclude": ["lib/**/*", "node_modules/**/*"]
+}
