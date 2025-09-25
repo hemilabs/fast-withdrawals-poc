@@ -1,19 +1,13 @@
 #!/usr/bin/env tsx
 
-import {
-  type Chain,
-  createWalletClient,
-  createPublicClient,
-  http,
-  parseEther,
-  Address,
-} from "viem";
-import { mnemonicToAccount } from "viem/accounts";
+import { type Chain, parseEther, Address } from "viem";
 import { mainnet, hemi } from "viem/chains";
 import * as dotenv from "dotenv";
 import { execSync } from "child_process";
 import { readFileSync } from "fs";
 import { join } from "path";
+
+import { createWallet } from "./utils.js";
 
 // Load environment variables
 dotenv.config();
@@ -68,7 +62,7 @@ interface DeploymentConfig {
 function compileContracts() {
   console.log("🔨 Compiling contracts...");
   try {
-    execSync("forge build", {
+    execSync("npm run build", {
       cwd: process.cwd(),
       stdio: "inherit",
     });
@@ -98,28 +92,6 @@ function loadContractArtifact(contractName: string) {
   } catch (error) {
     throw new Error(`Failed to load artifact for ${contractName}: ${error}`);
   }
-}
-
-/**
- * Create wallet client from mnemonic
- */
-function createWallet(config: DeploymentConfig) {
-  const account = mnemonicToAccount(config.mnemonic, {
-    accountIndex: config.accountIndex,
-  });
-
-  const walletClient = createWalletClient({
-    account,
-    chain: config.chain,
-    transport: http(config.rpcUrl),
-  });
-
-  const publicClient = createPublicClient({
-    chain: config.chain,
-    transport: http(config.rpcUrl),
-  });
-
-  return { walletClient, publicClient, account };
 }
 
 /**
@@ -179,7 +151,9 @@ async function deployPoolFactory(config: DeploymentConfig) {
 
     if (receipt.status === "success") {
       console.log("✅ PoolFactory deployed successfully!");
-      console.log(`📍 Contract address: ${receipt.contractAddress}`);
+      console.log(
+        `📍 PoolFactory contract address: ${receipt.contractAddress}`,
+      );
       console.log(`⛽ Gas used: ${receipt.gasUsed}`);
       console.log(`🧾 Block number: ${receipt.blockNumber}`);
 

@@ -2,9 +2,14 @@
   "name": "contracts",
   "version": "1.0.0",
   "scripts": {
+    "build": "forge build",
+    "postbuild": "npm run generate:abis",
     "build:scripts": "tsc --noEmit",
     "compile": "forge build",
     "deploy:factory": "tsx scripts/deploy-factory.ts",
+    "deploy:pool": "tsx scripts/create-pool.ts",
+    "generate:abis": "tsx scripts/generate-abis.ts",
+    "pool:configure-peer": "tsx scripts/set-pool-peer.ts",
     "test:scripts": "npm run typecheck",
     "typecheck": "tsc --noEmit"
   },
