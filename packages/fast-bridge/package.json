@@ -1,0 +1,35 @@
+{
+  "name": "fast-bridge",
+  "version": "1.0.0",
+  "description": "Fast bridge over LayerZero",
+  "keywords": [
+    "ETH",
+    "Ethereum",
+    "LayerZero",
+    "hemi",
+    "hemilabs",
+    "viem"
+  ],
+  "license": "MIT",
+  "author": {
+    "email": "gonzalo@hemi.xyz",
+    "name": "Gonzalo D'Elia"
+  },
+  "scripts": {
+    "tsc:check": "tsc"
+  },
+  "devDependencies": {
+    "@tsconfig/node24": "24.0.1",
+    "@types/node": "24.5.2",
+    "typescript": "5.9.2",
+    "viem": "2.37.8",
+    "viem-erc20": "1.1.0"
+  },
+  "peerDependencies": {
+    "viem": "^2.x"
+  },
+  "exports": {
+    ".": "./index.ts",
+    "./actions": "./actions/index.ts"
+  }
+}

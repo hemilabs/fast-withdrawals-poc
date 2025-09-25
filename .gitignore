@@ -6,7 +6,6 @@ build
 cache/
 deployments
 out/
-types
 
 # File system
 .DS_store
