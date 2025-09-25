@@ -3,7 +3,7 @@ import {
   type PublicClient,
   type TransactionReceipt,
   formatUnits,
-  Address,
+  type Address,
   createPublicClient,
   encodeFunctionData,
   http,
@@ -24,11 +24,11 @@ import {
 
 import { poolAbi } from "../../contracts/pool";
 import { getPoolFactoryAddress } from "../../contracts/poolFactory";
-import { BridgeEvents, BridgeParams } from "../../types/bridge";
+import type { BridgeEvents, BridgeParams } from "../../types/bridge";
 import { validateBridgeParams } from "../../utils/validation";
 
 import { getDstEid, getPoolAddress } from "../public/poolFactory";
-import { prepareSendParams } from "utils/pool";
+import { prepareSendParams } from "../../utils/pool";
 
 // Check user balance and allowance
 const checkUserBalance = async function ({

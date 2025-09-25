@@ -1,4 +1,4 @@
-import { Chain } from "viem";
+import { type Chain } from "viem";
 import { hemi, mainnet } from "viem/chains";
 
 export const getTargetChainId = function (sourceChainId: Chain["id"]) {

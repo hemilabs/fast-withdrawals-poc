@@ -1,11 +1,35 @@
-import { type PublicClient } from "viem";
+import type { Address, PublicClient } from "viem";
 import { readContract } from "viem/actions";
 
 import { poolAbi } from "../../contracts/pool";
 import { getPoolFactoryAddress } from "../../contracts/poolFactory";
-import { FeeEstimationParams } from "../../types/bridge";
+import type { FeeEstimationParams } from "../../types/bridge";
+import { prepareSendParams } from "../../utils/pool";
 import { getDstEid, getPoolAddress } from "./poolFactory";
-import { prepareSendParams } from "utils/pool";
+
+export const getFeeBasisPoints = async function (
+  publicClient: PublicClient,
+  params: { poolAddress: Address },
+) {
+  const { poolAddress } = params;
+  return readContract(publicClient, {
+    abi: poolAbi,
+    address: poolAddress,
+    functionName: "feeBasisPoints",
+  });
+};
+
+export const getPoolToken = async function (
+  publicClient: PublicClient,
+  params: { poolAddress: Address },
+) {
+  const { poolAddress } = params;
+  return readContract(publicClient, {
+    abi: poolAbi,
+    address: poolAddress,
+    functionName: "token",
+  });
+};
 
 export const quoteSend = async function (
   publicClient: PublicClient,

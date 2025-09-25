@@ -1,4 +1,4 @@
-import { Address, Hash, TransactionReceipt, WalletClient } from "viem";
+import type { Address, Hash, TransactionReceipt, WalletClient } from "viem";
 
 // Bridge operation events
 export type BridgeEvents = {

@@ -3,6 +3,7 @@
 
 # Compiler files
 build
+dist
 cache/
 deployments
 out/

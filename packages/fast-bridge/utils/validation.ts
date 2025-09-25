@@ -1,7 +1,7 @@
-import { type Address, isAddress, zeroAddress } from "viem";
+import { isAddress, zeroAddress } from "viem";
 import { hemi, mainnet } from "viem/chains";
 
-import { BridgeParams } from "../types/bridge";
+import { type BridgeParams } from "../types/bridge";
 
 // Validation result type
 type ValidationResult = { isValid: true } | { isValid: false; reason: string };
