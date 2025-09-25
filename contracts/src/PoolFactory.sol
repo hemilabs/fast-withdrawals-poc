@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: MIT
 pragma solidity ^0.8.28;
 
-import {Pool} from "./Pool.sol";
+import {Pool, PoolConstructorParams} from "./Pool.sol";
 import {ILayerZeroEndpointV2} from "@layerzerolabs/lz-evm-protocol-v2/contracts/interfaces/ILayerZeroEndpointV2.sol";
 import {Ownable} from "@openzeppelin/contracts/access/Ownable.sol";
 
@@ -108,20 +108,21 @@ contract PoolFactory is Ownable {
       revert PoolAlreadyExists();
     }
 
-    // Create new pool with msg.sender as the owner, provided treasury and fee
-    Pool pool = new Pool(
-      token,
-      address(endpoint),
-      msg.sender,
-      treasury,
-      feeBasisPoints
-    );
+    // Create PoolConstructorParams struct
+    PoolConstructorParams memory params = PoolConstructorParams({
+      token: token,
+      lzEndpoint: address(endpoint),
+      owner: msg.sender,
+      treasury: treasury,
+      feeBasisPoints: feeBasisPoints,
+      dstEid: dstEid,
+      sendLib: sendLib,
+      srcEid: srcEid,
+      receiveLib: receiveLib
+    });
 
+    Pool pool = new Pool(params);
     poolAddress = address(pool);
-
-    // Configure libraries for the new pool
-    endpoint.setSendLibrary(poolAddress, dstEid, sendLib);
-    endpoint.setReceiveLibrary(poolAddress, srcEid, receiveLib, 0);
 
     // Store pool information
     tokenPools[token] = poolAddress;

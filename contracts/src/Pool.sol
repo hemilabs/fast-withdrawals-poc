@@ -2,10 +2,26 @@
 pragma solidity ^0.8.28;
 
 import {OFTAdapter} from "@layerzerolabs/oft-evm/contracts/OFTAdapter.sol";
+import {ILayerZeroEndpointV2} from "@layerzerolabs/lz-evm-protocol-v2/contracts/interfaces/ILayerZeroEndpointV2.sol";
 import {Ownable} from "@openzeppelin/contracts/access/Ownable.sol";
 import {ReentrancyGuard} from "@openzeppelin/contracts/utils/ReentrancyGuard.sol";
 import {IERC20} from "@openzeppelin/contracts/token/ERC20/IERC20.sol";
 import {SafeERC20} from "@openzeppelin/contracts/token/ERC20/utils/SafeERC20.sol";
+
+/**
+ * @notice Struct to hold constructor parameters for Pool
+ */
+struct PoolConstructorParams {
+  address token;
+  address lzEndpoint;
+  address owner;
+  address treasury;
+  uint16 feeBasisPoints;
+  uint32 dstEid;
+  address sendLib;
+  uint32 srcEid;
+  address receiveLib;
+}
 
 /**
  * @title Pool
@@ -57,39 +73,42 @@ contract Pool is OFTAdapter, ReentrancyGuard {
   error InsufficientCollectedFees();
 
   /**
-   * @notice Constructor to initialize the pool with a specific token and LayerZero endpoint
-   * @param _token The ERC20 token address this pool will manage
-   * @param _lzEndpoint The LayerZero endpoint address for cross-chain messaging
-   * @param _owner The owner of the pool contract
-   * @param _treasury The treasury address that can withdraw fees
-   * @param _feeBasisPoints The fee in basis points (10000 = 100%)
+   * @notice Constructor to initialize the pool with a struct to avoid stack too deep
+   * @param params PoolConstructorParams struct
    */
   constructor(
-    address _token,
-    address _lzEndpoint,
-    address _owner,
-    address _treasury,
-    uint16 _feeBasisPoints
-  ) OFTAdapter(_token, _lzEndpoint, _owner) Ownable(_owner) {
-    require(_token != address(0), "Token address cannot be zero");
-    require(_owner != address(0), "Owner address cannot be zero");
-    if (_lzEndpoint == address(0)) {
+    PoolConstructorParams memory params
+  )
+    OFTAdapter(params.token, params.lzEndpoint, params.owner)
+    Ownable(params.owner)
+  {
+    require(params.token != address(0), "Token address cannot be zero");
+    require(params.owner != address(0), "Owner address cannot be zero");
+    if (params.lzEndpoint == address(0)) {
       revert InvalidEndpointAddress();
     }
-    if (_treasury == address(0)) {
+    if (params.treasury == address(0)) {
       revert InvalidTreasuryAddress();
     }
-    if (_feeBasisPoints > MAX_FEE_BASIS_POINTS) {
+    if (params.feeBasisPoints > MAX_FEE_BASIS_POINTS) {
       revert InvalidFee();
     }
 
-    treasury = _treasury;
-    feeBasisPoints = _feeBasisPoints;
+    treasury = params.treasury;
+    feeBasisPoints = params.feeBasisPoints;
     collectedFees = 0;
 
     // Automatically add the owner to the liquidity allow list
-    liquidityAllowList[_owner] = true;
-    emit LiquidityProviderAdded(_owner);
+    liquidityAllowList[params.owner] = true;
+    emit LiquidityProviderAdded(params.owner);
+
+    // Configure LayerZero libraries during initialization
+    _configureLayerZeroLibraries(
+      params.dstEid,
+      params.sendLib,
+      params.srcEid,
+      params.receiveLib
+    );
   }
 
   /**
@@ -304,5 +323,42 @@ contract Pool is OFTAdapter, ReentrancyGuard {
    */
   function isAllowedProvider(address provider) external view returns (bool) {
     return liquidityAllowList[provider];
+  }
+
+  /**
+   * @notice Configure LayerZero libraries for this pool
+   * @dev Internal function called during construction to set up LayerZero libraries
+   * @param _dstEid Destination endpoint ID for outbound messages
+   * @param _sendLib Send library address for outbound messages
+   * @param _srcEid Source endpoint ID for inbound messages
+   * @param _receiveLib Receive library address for inbound messages
+   */
+  function _configureLayerZeroLibraries(
+    uint32 _dstEid,
+    address _sendLib,
+    uint32 _srcEid,
+    address _receiveLib
+  ) internal {
+    // Get the LayerZero endpoint from the parent OFTAdapter
+    address endpointAddress = address(endpoint);
+
+    // Configure send library
+    if (_sendLib != address(0)) {
+      ILayerZeroEndpointV2(endpointAddress).setSendLibrary(
+        address(this),
+        _dstEid,
+        _sendLib
+      );
+    }
+
+    // Configure receive library
+    if (_receiveLib != address(0)) {
+      ILayerZeroEndpointV2(endpointAddress).setReceiveLibrary(
+        address(this),
+        _srcEid,
+        _receiveLib,
+        0
+      );
+    }
   }
 }

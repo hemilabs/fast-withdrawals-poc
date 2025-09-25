@@ -2,7 +2,7 @@
 pragma solidity ^0.8.28;
 
 import {Test} from "forge-std/Test.sol";
-import {Pool} from "../src/Pool.sol";
+import {Pool, PoolConstructorParams} from "../src/Pool.sol";
 import {MockERC20} from "./mocks/MockERC20.sol";
 import {MockLayerZeroEndpoint} from "./mocks/MockLayerZeroEndpoint.sol";
 import {TestablePool} from "./mocks/TestablePool.sol";
@@ -20,6 +20,8 @@ contract PoolTest is Test {
 
   uint256 public constant INITIAL_SUPPLY = 1000000e18;
   uint16 public constant FEE_BASIS_POINTS = 100; // 1%
+  uint32 public constant DST_EID = 101; // Ethereum mainnet
+  uint32 public constant SRC_EID = 999; // Hemi testnet
 
   function setUp() public {
     // Deploy test token
@@ -28,15 +30,20 @@ contract PoolTest is Test {
     // Deploy mock LayerZero endpoint
     mockEndpoint = new MockLayerZeroEndpoint();
 
-    // Deploy pool with owner, treasury, fee, and mock endpoint
+    // Deploy pool with new struct-based constructor
+    PoolConstructorParams memory params = PoolConstructorParams({
+      token: address(token),
+      lzEndpoint: address(mockEndpoint),
+      owner: owner,
+      treasury: treasury,
+      feeBasisPoints: FEE_BASIS_POINTS,
+      dstEid: DST_EID,
+      sendLib: address(0),
+      srcEid: SRC_EID,
+      receiveLib: address(0)
+    });
     vm.prank(owner);
-    pool = new Pool(
-      address(token),
-      address(mockEndpoint),
-      owner,
-      treasury,
-      FEE_BASIS_POINTS
-    );
+    pool = new Pool(params);
 
     // Mint tokens to test addresses
     token.mint(lp1, 10000e18);
@@ -72,30 +79,51 @@ contract PoolTest is Test {
   }
 
   function test_Constructor_RevertsOnZeroTokenAddress() public {
+    PoolConstructorParams memory params = PoolConstructorParams({
+      token: address(0),
+      lzEndpoint: address(mockEndpoint),
+      owner: owner,
+      treasury: treasury,
+      feeBasisPoints: FEE_BASIS_POINTS,
+      dstEid: DST_EID,
+      sendLib: address(0),
+      srcEid: SRC_EID,
+      receiveLib: address(0)
+    });
     vm.expectRevert();
-    new Pool(
-      address(0),
-      address(mockEndpoint),
-      owner,
-      treasury,
-      FEE_BASIS_POINTS
-    );
+    new Pool(params);
   }
 
   function test_Constructor_RevertsOnZeroOwnerAddress() public {
+    PoolConstructorParams memory params = PoolConstructorParams({
+      token: address(token),
+      lzEndpoint: address(mockEndpoint),
+      owner: address(0),
+      treasury: treasury,
+      feeBasisPoints: FEE_BASIS_POINTS,
+      dstEid: DST_EID,
+      sendLib: address(0),
+      srcEid: SRC_EID,
+      receiveLib: address(0)
+    });
     vm.expectRevert(); // OpenZeppelin v5 Ownable throws OwnableInvalidOwner
-    new Pool(
-      address(token),
-      address(mockEndpoint),
-      address(0),
-      treasury,
-      FEE_BASIS_POINTS
-    );
+    new Pool(params);
   }
 
   function test_Constructor_RevertsOnZeroEndpointAddress() public {
+    PoolConstructorParams memory params = PoolConstructorParams({
+      token: address(token),
+      lzEndpoint: address(0),
+      owner: owner,
+      treasury: treasury,
+      feeBasisPoints: FEE_BASIS_POINTS,
+      dstEid: DST_EID,
+      sendLib: address(0),
+      srcEid: SRC_EID,
+      receiveLib: address(0)
+    });
     vm.expectRevert(); // OFTCore will revert when trying to call the zero address
-    new Pool(address(token), address(0), owner, treasury, FEE_BASIS_POINTS);
+    new Pool(params);
   }
 
   function test_OnlyOwnerCanAddLPs() public {
@@ -480,13 +508,18 @@ contract PoolTest is Test {
   // Additional withdrawFees tests using TestablePool for full functionality testing
   function test_WithdrawFees_FullFunctionality() public {
     // Deploy a TestablePool for testing fee collection and withdrawal
-    TestablePool testPool = new TestablePool(
-      address(token),
-      address(mockEndpoint),
-      owner,
-      treasury,
-      FEE_BASIS_POINTS
-    );
+    PoolConstructorParams memory params = PoolConstructorParams({
+      token: address(token),
+      lzEndpoint: address(mockEndpoint),
+      owner: owner,
+      treasury: treasury,
+      feeBasisPoints: FEE_BASIS_POINTS,
+      dstEid: DST_EID,
+      sendLib: address(0),
+      srcEid: SRC_EID,
+      receiveLib: address(0)
+    });
+    TestablePool testPool = new TestablePool(params);
 
     // Give tokens to lp1 and approve the test pool
     vm.startPrank(lp1);
@@ -514,13 +547,18 @@ contract PoolTest is Test {
 
   function test_WithdrawFees_CanWithdrawAllFees() public {
     // Deploy a TestablePool for testing
-    TestablePool testPool = new TestablePool(
-      address(token),
-      address(mockEndpoint),
-      owner,
-      treasury,
-      FEE_BASIS_POINTS
-    );
+    PoolConstructorParams memory params = PoolConstructorParams({
+      token: address(token),
+      lzEndpoint: address(mockEndpoint),
+      owner: owner,
+      treasury: treasury,
+      feeBasisPoints: FEE_BASIS_POINTS,
+      dstEid: DST_EID,
+      sendLib: address(0),
+      srcEid: SRC_EID,
+      receiveLib: address(0)
+    });
+    TestablePool testPool = new TestablePool(params);
 
     // Simulate collected fees
     uint256 collectedAmount = 100e18;
@@ -544,13 +582,18 @@ contract PoolTest is Test {
 
   function test_WithdrawFees_MultipleWithdrawals() public {
     // Deploy a TestablePool for testing
-    TestablePool testPool = new TestablePool(
-      address(token),
-      address(mockEndpoint),
-      owner,
-      treasury,
-      FEE_BASIS_POINTS
-    );
+    PoolConstructorParams memory params = PoolConstructorParams({
+      token: address(token),
+      lzEndpoint: address(mockEndpoint),
+      owner: owner,
+      treasury: treasury,
+      feeBasisPoints: FEE_BASIS_POINTS,
+      dstEid: DST_EID,
+      sendLib: address(0),
+      srcEid: SRC_EID,
+      receiveLib: address(0)
+    });
+    TestablePool testPool = new TestablePool(params);
 
     // Simulate collected fees
     uint256 collectedAmount = 100e18;
@@ -605,13 +648,18 @@ contract PoolTest is Test {
 
   function test_RemoveLiquidity_CannotWithdrawCollectedFees() public {
     // Deploy a TestablePool to simulate collected fees
-    TestablePool testPool = new TestablePool(
-      address(token),
-      address(mockEndpoint),
-      owner,
-      treasury,
-      FEE_BASIS_POINTS
-    );
+    PoolConstructorParams memory params = PoolConstructorParams({
+      token: address(token),
+      lzEndpoint: address(mockEndpoint),
+      owner: owner,
+      treasury: treasury,
+      feeBasisPoints: FEE_BASIS_POINTS,
+      dstEid: DST_EID,
+      sendLib: address(0),
+      srcEid: SRC_EID,
+      receiveLib: address(0)
+    });
+    TestablePool testPool = new TestablePool(params);
 
     // Add LP to allowlist
     vm.prank(owner);

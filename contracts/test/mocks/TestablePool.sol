@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: MIT
 pragma solidity ^0.8.28;
 
-import {Pool} from "../../src/Pool.sol";
+import {Pool, PoolConstructorParams} from "../../src/Pool.sol";
 import {IERC20} from "@openzeppelin/contracts/token/ERC20/IERC20.sol";
 import {SafeERC20} from "@openzeppelin/contracts/token/ERC20/utils/SafeERC20.sol";
 
@@ -11,13 +11,7 @@ import {SafeERC20} from "@openzeppelin/contracts/token/ERC20/utils/SafeERC20.sol
  */
 contract TestablePool is Pool {
   using SafeERC20 for IERC20;
-  constructor(
-    address _token,
-    address _lzEndpoint,
-    address _owner,
-    address _treasury,
-    uint16 _feeBasisPoints
-  ) Pool(_token, _lzEndpoint, _owner, _treasury, _feeBasisPoints) {}
+  constructor(PoolConstructorParams memory params) Pool(params) {}
 
   /**
    * @notice Test helper function to simulate fee collection
