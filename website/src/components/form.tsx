@@ -174,12 +174,14 @@ export const Form = function ({ poolTokens }: { poolTokens: PoolToken[] }) {
             <ResetButton onClick={handleReset} />
           ) : (
             <SubmitButton
+              amount={amount}
               canSubmit={canSubmit}
               fromToken={fromToken}
               isAllowanceError={isAllowanceError}
               isAllowanceLoading={isAllowanceLoading}
               isRunningOperation={isRunningOperation}
               operationRunning={isRunningOperation ? "bridging" : "idle"}
+              selectedPool={selectedPool}
               validationError={validationError}
             />
           )}

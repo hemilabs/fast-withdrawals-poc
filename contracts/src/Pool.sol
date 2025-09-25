@@ -317,6 +317,14 @@ contract Pool is OFTAdapter, ReentrancyGuard {
   }
 
   /**
+   * @notice Returns the available liquidity in the pool (total balance minus collected fees)
+   * @return The available liquidity
+   */
+  function getLiquidityAvailable() external view returns (uint256) {
+    return this.getPoolBalance() - collectedFees;
+  }
+
+  /**
    * @notice Check if an address is in the liquidity allow list
    * @param provider The address to check
    * @return True if the address is allowed, false otherwise

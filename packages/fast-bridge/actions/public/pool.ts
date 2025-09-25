@@ -19,6 +19,18 @@ export const getFeeBasisPoints = async function (
   });
 };
 
+export const getLiquidityAvailable = async function (
+  publicClient: PublicClient,
+  params: { poolAddress: Address },
+) {
+  const { poolAddress } = params;
+  return readContract(publicClient, {
+    abi: poolAbi,
+    address: poolAddress,
+    functionName: "getLiquidityAvailable",
+  });
+};
+
 export const getPoolToken = async function (
   publicClient: PublicClient,
   params: { poolAddress: Address },

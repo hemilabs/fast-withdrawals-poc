@@ -278,6 +278,19 @@ export const poolAbi = [
   },
   {
     type: "function",
+    name: "getLiquidityAvailable",
+    inputs: [],
+    outputs: [
+      {
+        name: "",
+        type: "uint256",
+        internalType: "uint256",
+      },
+    ],
+    stateMutability: "view",
+  },
+  {
+    type: "function",
     name: "getPoolBalance",
     inputs: [],
     outputs: [

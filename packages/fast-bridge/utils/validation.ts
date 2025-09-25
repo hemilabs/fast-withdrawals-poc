@@ -87,7 +87,5 @@ export const validateBridgeParams = function (
     };
   }
 
-  // TODO validate remote address has enough tokens for bridging?
-
   return { isValid: true };
 };
