@@ -2,7 +2,6 @@
 pragma solidity ^0.8.28;
 
 import {Pool, PoolConstructorParams} from "./Pool.sol";
-import {ILayerZeroEndpointV2} from "@layerzerolabs/lz-evm-protocol-v2/contracts/interfaces/ILayerZeroEndpointV2.sol";
 import {Ownable} from "@openzeppelin/contracts/access/Ownable.sol";
 
 /**
@@ -12,7 +11,7 @@ import {Ownable} from "@openzeppelin/contracts/access/Ownable.sol";
  */
 contract PoolFactory is Ownable {
   /// @notice LayerZero endpoint for cross-chain messaging
-  ILayerZeroEndpointV2 public immutable endpoint;
+  address public immutable endpoint;
 
   /// @notice Destination endpoint ID for outbound messages
   uint32 public immutable dstEid;
@@ -44,10 +43,7 @@ contract PoolFactory is Ownable {
 
   // Errors
   error PoolAlreadyExists();
-  error InvalidTokenAddress();
   error InvalidEndpointAddress();
-  error InvalidTreasuryAddress();
-  error InvalidFee();
   error InvalidLibraryAddress();
 
   /// @notice Maximum fee in basis points (10000 = 100%)
@@ -75,7 +71,7 @@ contract PoolFactory is Ownable {
       revert InvalidLibraryAddress();
     }
 
-    endpoint = ILayerZeroEndpointV2(_endpoint);
+    endpoint = _endpoint;
     dstEid = _dstEid;
     sendLib = _sendLib;
     srcEid = _srcEid;
@@ -94,16 +90,6 @@ contract PoolFactory is Ownable {
     address treasury,
     uint16 feeBasisPoints
   ) external onlyOwner returns (address poolAddress) {
-    if (token == address(0)) {
-      revert InvalidTokenAddress();
-    }
-    if (treasury == address(0)) {
-      revert InvalidTreasuryAddress();
-    }
-    if (feeBasisPoints > MAX_FEE_BASIS_POINTS) {
-      revert InvalidFee();
-    }
-
     if (tokenPools[token] != address(0)) {
       revert PoolAlreadyExists();
     }
@@ -111,7 +97,7 @@ contract PoolFactory is Ownable {
     // Create PoolConstructorParams struct
     PoolConstructorParams memory params = PoolConstructorParams({
       token: token,
-      lzEndpoint: address(endpoint),
+      lzEndpoint: endpoint,
       owner: msg.sender,
       treasury: treasury,
       feeBasisPoints: feeBasisPoints,

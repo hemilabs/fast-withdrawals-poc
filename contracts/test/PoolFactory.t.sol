@@ -88,24 +88,6 @@ contract PoolFactoryTest is Test {
     );
   }
 
-  function test_CreatePool_RevertsIfTokenIsZeroAddress() public {
-    vm.prank(owner);
-    vm.expectRevert(PoolFactory.InvalidTokenAddress.selector);
-    factory.createPool(address(0), treasury, FEE_BASIS_POINTS);
-  }
-
-  function test_CreatePool_RevertsIfTreasuryIsZeroAddress() public {
-    vm.prank(owner);
-    vm.expectRevert(PoolFactory.InvalidTreasuryAddress.selector);
-    factory.createPool(address(token1), address(0), FEE_BASIS_POINTS);
-  }
-
-  function test_CreatePool_RevertsIfFeeExceedsMaximum() public {
-    vm.prank(owner);
-    vm.expectRevert(PoolFactory.InvalidFee.selector);
-    factory.createPool(address(token1), treasury, 1001); // Max is 1000
-  }
-
   function test_CreatePool_RevertsIfNotOwner() public {
     vm.prank(user1);
     vm.expectRevert(
