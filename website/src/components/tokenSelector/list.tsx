@@ -15,7 +15,7 @@ const TokenRow = ({
   onSelect: (t: TokenType) => void;
 }) => (
   <li
-    className="absolute left-1 right-1 top-0 cursor-pointer rounded-lg hover:bg-neutral-100 md:left-3 md:right-3 h-14"
+    className="px-4 cursor-pointer rounded-lg hover:bg-neutral-100 md:left-3 md:right-3 h-14"
     onClick={() => onSelect(token)}
   >
     <Token token={token} />
@@ -25,7 +25,7 @@ const TokenRow = ({
 export const List = function ({ onSelectToken, tokens }: Props) {
   return (
     <div className="skip-parent-padding-x flex-1 overflow-y-auto bg-white transition-shadow duration-200">
-      <ul className="relative">
+      <ul>
         {tokens.map((token) => (
           <TokenRow
             key={token.address}
