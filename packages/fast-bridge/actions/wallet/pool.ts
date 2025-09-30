@@ -10,7 +10,6 @@ import {
 } from "viem";
 import {
   getBalance,
-  readContract,
   simulateContract,
   waitForTransactionReceipt,
   writeContract,
@@ -29,7 +28,7 @@ import { validateBridgeParams } from "../../utils/validation";
 
 import { getDstEid, getPoolAddress } from "../public/poolFactory";
 import { prepareSendParams } from "../../utils/pool";
-import { getFeeBasisPoints, quoteSend } from "actions/public/pool";
+import { getFeeBasisPoints, quoteSend } from "../public/pool";
 
 // Check user balance and allowance
 const checkUserBalance = async function ({
