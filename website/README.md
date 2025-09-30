@@ -6,7 +6,7 @@ Follow the [setup](../README.md) in the root of the repo
 
 ## Env variables
 
-Configure the following environment variables
+Configure the following environment variables:
 
 ```sh
 VITE_PUBLIC_PORTAL_API_URL="<url>"
