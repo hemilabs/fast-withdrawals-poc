@@ -6,6 +6,10 @@ import {Pool, PoolConstructorParams} from "../src/Pool.sol";
 import {MockERC20} from "./mocks/MockERC20.sol";
 import {MockLayerZeroEndpoint} from "./mocks/MockLayerZeroEndpoint.sol";
 import {TestablePool} from "./mocks/TestablePool.sol";
+import {
+  MessagingFee,
+  SendParam
+} from "@layerzerolabs/oft-evm/contracts/interfaces/IOFT.sol";
 
 contract PoolTest is Test {
   Pool public pool;
@@ -17,11 +21,17 @@ contract PoolTest is Test {
   address public lp1 = makeAddr("lp1");
   address public lp2 = makeAddr("lp2");
   address public nonLP = makeAddr("nonLP");
+  uint[3] public fixedArray = [1, 2, 3];
+  address[] public dvnAddresses = [
+    makeAddr("dvn1"),
+    makeAddr("dvn2"),
+    makeAddr("dvn3")
+  ];
+  address public executorAddress = makeAddr("exec");
 
   uint256 public constant INITIAL_SUPPLY = 1000000e18;
   uint16 public constant FEE_BASIS_POINTS = 100; // 1%
   uint32 public constant DST_EID = 101; // Ethereum mainnet
-  uint32 public constant SRC_EID = 999; // Hemi testnet
 
   function setUp() public {
     // Deploy test token
@@ -37,10 +47,11 @@ contract PoolTest is Test {
       owner: owner,
       treasury: treasury,
       feeBasisPoints: FEE_BASIS_POINTS,
-      dstEid: DST_EID,
+      eid: DST_EID,
       sendLib: address(0),
-      srcEid: SRC_EID,
-      receiveLib: address(0)
+      receiveLib: address(0),
+      dvnAddresses: dvnAddresses,
+      executorAddress: executorAddress
     });
     vm.prank(owner);
     pool = new Pool(params);
@@ -85,10 +96,28 @@ contract PoolTest is Test {
       owner: owner,
       treasury: treasury,
       feeBasisPoints: FEE_BASIS_POINTS,
-      dstEid: DST_EID,
+      eid: DST_EID,
       sendLib: address(0),
-      srcEid: SRC_EID,
-      receiveLib: address(0)
+      receiveLib: address(0),
+      dvnAddresses: dvnAddresses,
+      executorAddress: executorAddress
+    });
+    vm.expectRevert();
+    new Pool(params);
+  }
+
+  function test_Constructor_RevertsOnZeroEid() public {
+    PoolConstructorParams memory params = PoolConstructorParams({
+      token: address(0),
+      lzEndpoint: address(mockEndpoint),
+      owner: owner,
+      treasury: treasury,
+      feeBasisPoints: FEE_BASIS_POINTS,
+      eid: 0,
+      sendLib: address(0),
+      receiveLib: address(0),
+      dvnAddresses: dvnAddresses,
+      executorAddress: executorAddress
     });
     vm.expectRevert();
     new Pool(params);
@@ -101,10 +130,11 @@ contract PoolTest is Test {
       owner: address(0),
       treasury: treasury,
       feeBasisPoints: FEE_BASIS_POINTS,
-      dstEid: DST_EID,
+      eid: DST_EID,
       sendLib: address(0),
-      srcEid: SRC_EID,
-      receiveLib: address(0)
+      receiveLib: address(0),
+      dvnAddresses: dvnAddresses,
+      executorAddress: executorAddress
     });
     vm.expectRevert(); // OpenZeppelin v5 Ownable throws OwnableInvalidOwner
     new Pool(params);
@@ -117,10 +147,11 @@ contract PoolTest is Test {
       owner: owner,
       treasury: treasury,
       feeBasisPoints: FEE_BASIS_POINTS,
-      dstEid: DST_EID,
+      eid: DST_EID,
       sendLib: address(0),
-      srcEid: SRC_EID,
-      receiveLib: address(0)
+      receiveLib: address(0),
+      dvnAddresses: dvnAddresses,
+      executorAddress: executorAddress
     });
     vm.expectRevert(); // OFTCore will revert when trying to call the zero address
     new Pool(params);
@@ -514,10 +545,11 @@ contract PoolTest is Test {
       owner: owner,
       treasury: treasury,
       feeBasisPoints: FEE_BASIS_POINTS,
-      dstEid: DST_EID,
+      eid: DST_EID,
       sendLib: address(0),
-      srcEid: SRC_EID,
-      receiveLib: address(0)
+      receiveLib: address(0),
+      dvnAddresses: dvnAddresses,
+      executorAddress: executorAddress
     });
     TestablePool testPool = new TestablePool(params);
 
@@ -553,10 +585,11 @@ contract PoolTest is Test {
       owner: owner,
       treasury: treasury,
       feeBasisPoints: FEE_BASIS_POINTS,
-      dstEid: DST_EID,
+      eid: DST_EID,
       sendLib: address(0),
-      srcEid: SRC_EID,
-      receiveLib: address(0)
+      receiveLib: address(0),
+      dvnAddresses: dvnAddresses,
+      executorAddress: executorAddress
     });
     TestablePool testPool = new TestablePool(params);
 
@@ -588,10 +621,11 @@ contract PoolTest is Test {
       owner: owner,
       treasury: treasury,
       feeBasisPoints: FEE_BASIS_POINTS,
-      dstEid: DST_EID,
+      eid: DST_EID,
       sendLib: address(0),
-      srcEid: SRC_EID,
-      receiveLib: address(0)
+      receiveLib: address(0),
+      dvnAddresses: dvnAddresses,
+      executorAddress: executorAddress
     });
     TestablePool testPool = new TestablePool(params);
 
@@ -654,10 +688,11 @@ contract PoolTest is Test {
       owner: owner,
       treasury: treasury,
       feeBasisPoints: FEE_BASIS_POINTS,
-      dstEid: DST_EID,
+      eid: DST_EID,
       sendLib: address(0),
-      srcEid: SRC_EID,
-      receiveLib: address(0)
+      receiveLib: address(0),
+      dvnAddresses: dvnAddresses,
+      executorAddress: executorAddress
     });
     TestablePool testPool = new TestablePool(params);
 

@@ -4,5 +4,5 @@ export {
   getPoolToken,
   quoteSend,
 } from "./public/pool";
-export { getAllPools } from "./public/poolFactory";
+export { getAllPools, getPoolAddress } from "./public/poolFactory";
 export { bridgeToken } from "./wallet/pool";

@@ -32,6 +32,7 @@ export type BridgeParams = {
 export type FeeEstimationParams = {
   amount: bigint;
   chainId: number;
+  feeBasisPoints: number;
   toAddress: Address;
   tokenAddress: Address;
 };

@@ -6,7 +6,7 @@ test = "test"
 script = "script"
 
 # Solidity compiler version
-solc_version = "0.8.28"
+solc_version = "0.8.30"
 
 # Enable optimization
 optimizer = true
@@ -23,6 +23,7 @@ remappings = [
     '@layerzerolabs/lz-evm-messagelib-v2/=lib/LayerZero-v2/packages/layerzero-v2/evm/messagelib/',
     "@openzeppelin/contracts/=lib/openzeppelin-contracts-upgradeable/lib/openzeppelin-contracts/contracts/",
     "@openzeppelin/contracts-upgradeable/=lib/openzeppelin-contracts-upgradeable/contracts/",
+    "solidity-bytes-utils/contracts/=lib/solidity-bytes-utils/contracts/",
 ]
 
 # Test configuration

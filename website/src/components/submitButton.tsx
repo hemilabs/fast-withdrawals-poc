@@ -4,6 +4,7 @@ import { SubmitWhenConnectedToChain } from "components/submitWhenConnectedToChai
 import { useLiquidityAvailable } from "hooks/useLiquidityAvailable";
 import type { PoolToken } from "types/poolToken";
 import { type Token } from "types/token";
+import { formatUnits } from "viem";
 
 type Props = {
   amount: bigint;
@@ -44,7 +45,7 @@ export const SubmitButton = function ({
       return "Failed to load liquidity";
     }
     if (notEnoughLiquidity) {
-      return "Not enough liquidity to bridge";
+      return `Not enough liquidity to bridge (Max ${formatUnits(liquidityAvailable, fromToken.decimals)})`;
     }
     if (operationRunning === "bridging") {
       return "Bridging...";

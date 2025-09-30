@@ -14,8 +14,9 @@ dotenv.config();
 
 // LayerZero configuration interface
 interface LayerZeroConfig {
+  dvnAddresses: Address[];
+  executorAddress: Address;
   endpoint: Address;
-  srcEid: number;
   dstEid: number;
   sendLib: Address;
   receiveLib: Address;
@@ -25,16 +26,18 @@ interface LayerZeroConfig {
 const LAYERZERO_CONFIGS: Record<Chain["id"], LayerZeroConfig> = {
   // See https://docs.layerzero.network/v2/deployments/chains/ethereum
   [mainnet.id]: {
+    dvnAddresses: ["0x589dedbd617e0cbcb916a9223f4d1300c294236b"],
     endpoint: "0x1a44076050125825900e736c501f859c50fE728c",
-    srcEid: 30101,
+    executorAddress: "0x173272739Bd7Aa6e4e214714048a9fE699453059",
     dstEid: 30329, // Hemi
     sendLib: "0xbB2Ea70C9E858123480642Cf96acbcCE1372dCe1",
     receiveLib: "0xc02Ab410f0734EFa3F14628780e6e695156024C2",
   },
   // See https://docs.layerzero.network/v2/deployments/chains/hemi
   [hemi.id]: {
+    dvnAddresses: ["0x282b3386571f7f794450d5789911a9804fa346b4"],
     endpoint: "0x6F475642a6e85809B1c36Fa62763669b1b48DD5B",
-    srcEid: 30329,
+    executorAddress: "0x4208D6E27538189bB48E603D6123A94b8Abe0A0b",
     dstEid: 30101, // Ethereum
     sendLib: "0xC39161c743D0307EB9BCc9FEF03eeb9Dc4802de7",
     receiveLib: "0xe1844c5D63a9543023008D332Bd3d2e6f1FE1043",
@@ -115,10 +118,10 @@ async function deployPoolFactory(config: DeploymentConfig) {
   const lzConfig = LAYERZERO_CONFIGS[config.chain.id];
   console.log(`🔗 Using LayerZero configuration:`);
   console.log(`  Endpoint: ${lzConfig.endpoint}`);
-  console.log(`  Source EID: ${lzConfig.srcEid}`);
   console.log(`  Destination EID: ${lzConfig.dstEid}`);
   console.log(`  Send Library: ${lzConfig.sendLib}`);
   console.log(`  Receive Library: ${lzConfig.receiveLib}`);
+  console.log(`  RPC Url: ${config.rpcUrl}`);
 
   // Check account balance
   const balance = await publicClient.getBalance({ address: account.address });
@@ -129,18 +132,15 @@ async function deployPoolFactory(config: DeploymentConfig) {
   }
 
   try {
+    console.log("🔍 Estimating gas for deployment...");
     // Deploy the contract
     console.log("📡 Deploying PoolFactory...");
     const hash = await walletClient.deployContract({
       abi,
+      args: [lzConfig],
       bytecode,
-      args: [
-        lzConfig.endpoint,
-        lzConfig.dstEid,
-        lzConfig.sendLib,
-        lzConfig.srcEid,
-        lzConfig.receiveLib,
-      ],
+      // needed because estimation fails with the default value
+      gas: BigInt(5_000_000),
     });
 
     console.log(`📋 Transaction hash: ${hash}`);
@@ -218,7 +218,7 @@ async function main() {
 
     console.log("\n🎉 Deployment Summary:");
     console.log(`Chain: ${config.chain.name}`);
-    console.log(`Contract Address: ${result.address}`);
+    console.log(`PoolFactory Contract Address: ${result.address}`);
     console.log(`Transaction Hash: ${result.transactionHash}`);
     console.log(`Block Number: ${result.blockNumber}`);
     console.log(`Gas Used: ${result.gasUsed}`);
@@ -234,7 +234,6 @@ async function main() {
       timestamp: new Date().toISOString(),
       layerZeroConfig: {
         endpoint: lzConfig.endpoint,
-        srcEid: lzConfig.srcEid,
         dstEid: lzConfig.dstEid,
         sendLib: lzConfig.sendLib,
         receiveLib: lzConfig.receiveLib,

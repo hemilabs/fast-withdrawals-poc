@@ -8,11 +8,22 @@ export const getAllPools = async function (
   params: { poolFactoryAddress: Address },
 ) {
   const { poolFactoryAddress } = params;
-  return readContract(publicClient, {
+  const poolsCount = await readContract(publicClient, {
     abi: poolFactoryAbi,
     address: poolFactoryAddress,
-    functionName: "getAllPools",
+    functionName: "getPoolsCount",
   });
+
+  return Promise.all(
+    Array.from({ length: Number(poolsCount) }, (_, i) =>
+      readContract(publicClient, {
+        abi: poolFactoryAbi,
+        address: poolFactoryAddress,
+        functionName: "getPoolByIndex",
+        args: [BigInt(i)],
+      }),
+    ),
+  );
 };
 
 export const getDstEid = async function (

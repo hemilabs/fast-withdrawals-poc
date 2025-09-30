@@ -1,6 +1,8 @@
 // SPDX-License-Identifier: MIT
 pragma solidity ^0.8.28;
 
+import {SetConfigParam} from "@layerzerolabs/lz-evm-protocol-v2/contracts/interfaces/IMessageLibManager.sol";
+
 /**
  * @title MockLayerZeroEndpoint
  * @notice A minimal mock LayerZero endpoint for testing purposes
@@ -35,6 +37,14 @@ contract MockLayerZeroEndpoint {
 
   function setPeer(uint32 _eid, bytes32 _peer) external {
     peers[msg.sender][_eid] = _peer;
+  }
+
+  function setConfig(
+    address _oapp,
+    address _sendLib,
+    SetConfigParam[] calldata _configParams
+  ) external {
+    // Empty implementation for testing
   }
 
   function send(

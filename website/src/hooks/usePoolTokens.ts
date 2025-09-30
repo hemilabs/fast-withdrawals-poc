@@ -17,7 +17,6 @@ export const usePoolTokens = function () {
       });
 
       const allPools = await getAllPools(publicClient, { poolFactoryAddress });
-
       return Promise.all(
         allPools.map((pool) =>
           getPoolToken(publicClient, { poolAddress: pool }).then(

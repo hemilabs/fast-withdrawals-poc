@@ -30,7 +30,8 @@ export interface WalletConfig {
 
 export function createWallet(config: WalletConfig) {
   const account = mnemonicToAccount(config.mnemonic, {
-    accountIndex: config.accountIndex,
+    addressIndex: config.accountIndex,
+    // accountIndex: config.accountIndex,
   });
 
   const walletClient = createWalletClient({

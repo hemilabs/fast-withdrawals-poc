@@ -47,7 +47,7 @@ export const quoteSend = async function (
   publicClient: PublicClient,
   params: FeeEstimationParams,
 ) {
-  const { amount, chainId, toAddress } = params;
+  const { amount, chainId, feeBasisPoints, toAddress } = params;
 
   const poolFactoryAddress = getPoolFactoryAddress(chainId);
 
@@ -63,6 +63,7 @@ export const quoteSend = async function (
   const sendParam = prepareSendParams({
     amount,
     dstEid,
+    feeBasisPoints,
     toAddress,
   });
 

@@ -1,8 +1,12 @@
 // SPDX-License-Identifier: MIT
 pragma solidity ^0.8.28;
 
+import {UlnConfig} from "@layerzerolabs/lz-evm-messagelib-v2/contracts/uln/UlnBase.sol";
+import {EnforcedOptionParam} from "@layerzerolabs/oapp-evm/contracts/oapp/libs/OAppOptionsType3.sol";
+import {OptionsBuilder} from "@layerzerolabs/oapp-evm/contracts/oapp/libs/OptionsBuilder.sol";
 import {OFTAdapter} from "@layerzerolabs/oft-evm/contracts/OFTAdapter.sol";
-import {ILayerZeroEndpointV2} from "@layerzerolabs/lz-evm-protocol-v2/contracts/interfaces/ILayerZeroEndpointV2.sol";
+import {ExecutorConfig} from "@layerzerolabs/lz-evm-messagelib-v2/contracts/SendLibBase.sol";
+import {SetConfigParam} from "@layerzerolabs/lz-evm-protocol-v2/contracts/interfaces/IMessageLibManager.sol";
 import {Ownable} from "@openzeppelin/contracts/access/Ownable.sol";
 import {ReentrancyGuard} from "@openzeppelin/contracts/utils/ReentrancyGuard.sol";
 import {IERC20} from "@openzeppelin/contracts/token/ERC20/IERC20.sol";
@@ -12,15 +16,17 @@ import {SafeERC20} from "@openzeppelin/contracts/token/ERC20/utils/SafeERC20.sol
  * @notice Struct to hold constructor parameters for Pool
  */
 struct PoolConstructorParams {
+  uint16 feeBasisPoints;
+  // remote chain eid
+  uint32 eid;
   address token;
   address lzEndpoint;
   address owner;
   address treasury;
-  uint16 feeBasisPoints;
-  uint32 dstEid;
   address sendLib;
-  uint32 srcEid;
   address receiveLib;
+  address[] dvnAddresses;
+  address executorAddress;
 }
 
 /**
@@ -29,6 +35,7 @@ struct PoolConstructorParams {
  * @dev Uses OpenZeppelin's Ownable for access control and ReentrancyGuard for security
  */
 contract Pool is OFTAdapter, ReentrancyGuard {
+  using OptionsBuilder for bytes;
   using SafeERC20 for IERC20;
 
   /// @notice Maximum fee in basis points (10000 = 100%)
@@ -65,7 +72,10 @@ contract Pool is OFTAdapter, ReentrancyGuard {
   error InvalidAmount();
   error TransferFailed();
   error ProviderNotInAllowlist();
+  error InvalidDvnAddresses();
+  error InvalidEid();
   error InvalidEndpointAddress();
+  error InvalidExecutorAddress();
   error InvalidFee();
   error InvalidTreasuryAddress();
   error SameTreasuryAddress();
@@ -82,8 +92,7 @@ contract Pool is OFTAdapter, ReentrancyGuard {
     OFTAdapter(params.token, params.lzEndpoint, params.owner)
     Ownable(params.owner)
   {
-    require(params.token != address(0), "Token address cannot be zero");
-    require(params.owner != address(0), "Owner address cannot be zero");
+    // Token and Owner are checked by parent constructors
     if (params.lzEndpoint == address(0)) {
       revert InvalidEndpointAddress();
     }
@@ -92,6 +101,20 @@ contract Pool is OFTAdapter, ReentrancyGuard {
     }
     if (params.feeBasisPoints > MAX_FEE_BASIS_POINTS) {
       revert InvalidFee();
+    }
+    if (params.eid == 0) {
+      revert InvalidEid();
+    }
+    if (params.executorAddress == address(0)) {
+      revert InvalidExecutorAddress();
+    }
+    if (params.dvnAddresses.length == 0) {
+      revert InvalidDvnAddresses();
+    }
+    for (uint256 i = 0; i < params.dvnAddresses.length; i++) {
+      if (params.dvnAddresses[i] == address(0)) {
+        revert InvalidDvnAddresses();
+      }
     }
 
     treasury = params.treasury;
@@ -103,12 +126,7 @@ contract Pool is OFTAdapter, ReentrancyGuard {
     emit LiquidityProviderAdded(params.owner);
 
     // Configure LayerZero libraries during initialization
-    _configureLayerZeroLibraries(
-      params.dstEid,
-      params.sendLib,
-      params.srcEid,
-      params.receiveLib
-    );
+    _configureLayerZero(params);
   }
 
   /**
@@ -336,37 +354,65 @@ contract Pool is OFTAdapter, ReentrancyGuard {
   /**
    * @notice Configure LayerZero libraries for this pool
    * @dev Internal function called during construction to set up LayerZero libraries
-   * @param _dstEid Destination endpoint ID for outbound messages
-   * @param _sendLib Send library address for outbound messages
-   * @param _srcEid Source endpoint ID for inbound messages
-   * @param _receiveLib Receive library address for inbound messages
+   * @param params PoolConstructorParams struct containing configuration parameters
    */
-  function _configureLayerZeroLibraries(
-    uint32 _dstEid,
-    address _sendLib,
-    uint32 _srcEid,
-    address _receiveLib
-  ) internal {
-    // Get the LayerZero endpoint from the parent OFTAdapter
-    address endpointAddress = address(endpoint);
+  function _configureLayerZero(PoolConstructorParams memory params) internal {
+    // TODO review these configs
+    // See https://docs.layerzero.network/v2/developers/evm/oft/quickstart#22-set-send-config-and-receive-config
+    UlnConfig memory uln = UlnConfig({
+      confirmations: 15,
+      requiredDVNCount: uint8(params.dvnAddresses.length),
+      optionalDVNCount: type(uint8).max,
+      optionalDVNThreshold: 0,
+      requiredDVNs: params.dvnAddresses,
+      optionalDVNs: new address[](0)
+    });
+
+    ExecutorConfig memory exec = ExecutorConfig({
+      // max bytes per cross-chain message
+      maxMessageSize: 10000,
+      executor: params.executorAddress
+    });
+
+    SetConfigParam memory execConfigParam = SetConfigParam(
+      params.eid,
+      1,
+      abi.encode(exec)
+    );
+    SetConfigParam memory ulnConfigParam = SetConfigParam(
+      params.eid,
+      2,
+      abi.encode(uln)
+    );
+
+    SetConfigParam[] memory sendConfig = new SetConfigParam[](2);
+    sendConfig[0] = execConfigParam;
+    sendConfig[1] = ulnConfigParam;
 
     // Configure send library
-    if (_sendLib != address(0)) {
-      ILayerZeroEndpointV2(endpointAddress).setSendLibrary(
-        address(this),
-        _dstEid,
-        _sendLib
-      );
-    }
+    endpoint.setSendLibrary(address(this), params.eid, params.sendLib);
+    endpoint.setConfig(address(this), params.sendLib, sendConfig);
+
+    // Send requires 2 configs, but receive only 1
+    SetConfigParam[] memory receiveConfig = new SetConfigParam[](1);
+    receiveConfig[0] = ulnConfigParam;
 
     // Configure receive library
-    if (_receiveLib != address(0)) {
-      ILayerZeroEndpointV2(endpointAddress).setReceiveLibrary(
-        address(this),
-        _srcEid,
-        _receiveLib,
-        0
-      );
-    }
+    endpoint.setReceiveLibrary(address(this), params.eid, params.receiveLib, 0);
+    endpoint.setConfig(address(this), params.receiveLib, receiveConfig);
+
+    // configure enforced options
+    bytes memory options = OptionsBuilder
+      .newOptions() // TODO review this config
+      .addExecutorLzReceiveOption(80000, 0);
+
+    // Create enforced options array
+    EnforcedOptionParam[] memory enforcedOptions = new EnforcedOptionParam[](1);
+    enforcedOptions[0] = EnforcedOptionParam({
+      eid: params.eid,
+      msgType: 1,
+      options: options
+    });
+    _setEnforcedOptions(enforcedOptions);
   }
 }

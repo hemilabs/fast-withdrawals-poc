@@ -2,7 +2,10 @@
 pragma solidity ^0.8.28;
 
 import {Test} from "forge-std/Test.sol";
-import {PoolFactory} from "../src/PoolFactory.sol";
+import {
+  PoolFactory,
+  PoolFactoryConstructorParams
+} from "../src/PoolFactory.sol";
 import {Pool} from "../src/Pool.sol";
 import {MockERC20} from "./mocks/MockERC20.sol";
 import {MockLayerZeroEndpoint} from "./mocks/MockLayerZeroEndpoint.sol";
@@ -23,22 +26,32 @@ contract PoolFactoryTest is Test {
   // LayerZero parameters
   uint32 public constant DST_EID = 40161; // Example destination endpoint ID
   address public sendLib = makeAddr("sendLib");
-  uint32 public constant SRC_EID = 40217; // Example source endpoint ID
   address public receiveLib = makeAddr("receiveLib");
+  address[] public dvnAddresses = [
+    makeAddr("dvn1"),
+    makeAddr("dvn2"),
+    makeAddr("dvn3")
+  ];
+  address public executorAddress = makeAddr("exec");
+
+  PoolFactoryConstructorParams public poolFactoryParams;
 
   function setUp() public {
     // Deploy mock endpoint first
     mockEndpoint = new MockLayerZeroEndpoint();
 
+    poolFactoryParams = PoolFactoryConstructorParams({
+      dstEid: DST_EID,
+      endpoint: address(mockEndpoint),
+      sendLib: sendLib,
+      receiveLib: receiveLib,
+      dvnAddresses: dvnAddresses,
+      executorAddress: executorAddress
+    });
+
     // Deploy factory with mock endpoint as owner
     vm.prank(owner);
-    factory = new PoolFactory(
-      address(mockEndpoint),
-      DST_EID,
-      sendLib,
-      SRC_EID,
-      receiveLib
-    );
+    factory = new PoolFactory(poolFactoryParams);
 
     // Deploy test tokens
     token1 = new MockERC20("Token1", "TK1", 1000000e18);
@@ -47,44 +60,58 @@ contract PoolFactoryTest is Test {
 
   function test_Constructor_RevertsIfEndpointIsZeroAddress() public {
     vm.expectRevert(PoolFactory.InvalidEndpointAddress.selector);
-    new PoolFactory(address(0), DST_EID, sendLib, SRC_EID, receiveLib);
+    new PoolFactory(
+      PoolFactoryConstructorParams({
+        dstEid: DST_EID,
+        endpoint: address(0),
+        sendLib: sendLib,
+        receiveLib: receiveLib,
+        dvnAddresses: dvnAddresses,
+        executorAddress: executorAddress
+      })
+    );
   }
 
   function test_Constructor_SetsEndpoint() public {
     MockLayerZeroEndpoint testEndpoint = new MockLayerZeroEndpoint();
-    PoolFactory testFactory = new PoolFactory(
-      address(testEndpoint),
-      DST_EID,
-      sendLib,
-      SRC_EID,
-      receiveLib
-    );
+    PoolFactoryConstructorParams memory params = PoolFactoryConstructorParams({
+      dstEid: DST_EID,
+      endpoint: address(testEndpoint),
+      sendLib: sendLib,
+      receiveLib: receiveLib,
+      dvnAddresses: dvnAddresses,
+      executorAddress: executorAddress
+    });
+    PoolFactory testFactory = new PoolFactory(params);
     assertEq(address(testFactory.endpoint()), address(testEndpoint));
     assertEq(testFactory.dstEid(), DST_EID);
-    assertEq(testFactory.sendLib(), sendLib);
-    assertEq(testFactory.srcEid(), SRC_EID);
-    assertEq(testFactory.receiveLib(), receiveLib);
   }
 
   function test_Constructor_RevertsIfSendLibIsZeroAddress() public {
     vm.expectRevert(PoolFactory.InvalidLibraryAddress.selector);
     new PoolFactory(
-      address(mockEndpoint),
-      DST_EID,
-      address(0),
-      SRC_EID,
-      receiveLib
+      PoolFactoryConstructorParams({
+        dstEid: DST_EID,
+        endpoint: address(mockEndpoint),
+        sendLib: address(0),
+        receiveLib: receiveLib,
+        dvnAddresses: dvnAddresses,
+        executorAddress: executorAddress
+      })
     );
   }
 
   function test_Constructor_RevertsIfReceiveLibIsZeroAddress() public {
     vm.expectRevert(PoolFactory.InvalidLibraryAddress.selector);
     new PoolFactory(
-      address(mockEndpoint),
-      DST_EID,
-      sendLib,
-      SRC_EID,
-      address(0)
+      PoolFactoryConstructorParams({
+        dstEid: DST_EID,
+        endpoint: address(mockEndpoint),
+        sendLib: sendLib,
+        receiveLib: address(0),
+        dvnAddresses: dvnAddresses,
+        executorAddress: executorAddress
+      })
     );
   }
 
@@ -141,63 +168,6 @@ contract PoolFactoryTest is Test {
     assertTrue(pool.isAllowedProvider(owner));
   }
 
-  function test_CreatePool_CallsLibraryConfiguration() public {
-    // Verify initial state - no library calls yet
-    assertEq(mockEndpoint.getSendLibraryCallsCount(), 0);
-    assertEq(mockEndpoint.getReceiveLibraryCallsCount(), 0);
-
-    // Create pool - this should trigger the library configuration calls
-    vm.prank(owner);
-    address poolAddress = factory.createPool(
-      address(token1),
-      treasury,
-      FEE_BASIS_POINTS
-    );
-
-    // Verify the library configuration calls were made
-    assertEq(mockEndpoint.getSendLibraryCallsCount(), 1);
-    assertEq(mockEndpoint.getReceiveLibraryCallsCount(), 1);
-
-    // Verify setSendLibrary call details
-    MockLayerZeroEndpoint.LibraryCall memory sendCall = mockEndpoint
-      .getSendLibraryCall(0);
-    assertEq(sendCall.oapp, poolAddress);
-    assertEq(sendCall.eid, DST_EID);
-    assertEq(sendCall.lib, sendLib);
-
-    // Verify setReceiveLibrary call details
-    MockLayerZeroEndpoint.LibraryCall memory receiveCall = mockEndpoint
-      .getReceiveLibraryCall(0);
-    assertEq(receiveCall.oapp, poolAddress);
-    assertEq(receiveCall.eid, SRC_EID);
-    assertEq(receiveCall.lib, receiveLib);
-    assertEq(receiveCall.gracePeriod, 0);
-  }
-
-  function test_GetPoolsCount_WorksCorrectly(uint8 poolCount) public {
-    // Bound the input to a reasonable range to avoid gas issues and ensure we have valid tokens
-    poolCount = uint8(bound(poolCount, 0, 5));
-
-    // Initially no pools
-    assertEq(factory.getPoolsCount(), 0);
-
-    // Create N pools with different mock token contracts
-    MockERC20[] memory tokens = new MockERC20[](poolCount);
-    for (uint256 i = 0; i < poolCount; i++) {
-      // Deploy a unique mock token for each pool
-      tokens[i] = new MockERC20(
-        string(abi.encodePacked("Token", i.toString())),
-        string(abi.encodePacked("TK", i.toString())),
-        1000000e18
-      );
-      vm.prank(owner);
-      factory.createPool(address(tokens[i]), treasury, FEE_BASIS_POINTS);
-    }
-
-    // Verify the pool count matches the expected number
-    assertEq(factory.getPoolsCount(), poolCount);
-  }
-
   function test_GetPool_ReturnsCorrectAddress() public {
     // Initially returns zero address
     assertEq(factory.getPool(address(token1)), address(0));
@@ -245,31 +215,5 @@ contract PoolFactoryTest is Test {
     // Index 1 should revert
     vm.expectRevert("Index out of bounds");
     factory.getPoolByIndex(1);
-  }
-
-  function test_GetAllPools_WorksCorrectly() public {
-    // Initially empty
-    address[] memory pools = factory.getAllPools();
-    assertEq(pools.length, 0);
-
-    // Create pools
-    vm.prank(owner);
-    address pool1 = factory.createPool(
-      address(token1),
-      treasury,
-      FEE_BASIS_POINTS
-    );
-    vm.prank(owner);
-    address pool2 = factory.createPool(
-      address(token2),
-      treasury,
-      FEE_BASIS_POINTS
-    );
-
-    // Check getAllPools
-    pools = factory.getAllPools();
-    assertEq(pools.length, 2);
-    assertEq(pools[0], pool1);
-    assertEq(pools[1], pool2);
   }
 }

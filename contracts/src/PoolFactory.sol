@@ -4,6 +4,15 @@ pragma solidity ^0.8.28;
 import {Pool, PoolConstructorParams} from "./Pool.sol";
 import {Ownable} from "@openzeppelin/contracts/access/Ownable.sol";
 
+struct PoolFactoryConstructorParams {
+  uint32 dstEid;
+  address endpoint;
+  address sendLib;
+  address receiveLib;
+  address[] dvnAddresses;
+  address executorAddress;
+}
+
 /**
  * @title PoolFactory
  * @notice Factory contract for creating Pool instances for different ERC20 tokens
@@ -17,16 +26,18 @@ contract PoolFactory is Ownable {
   uint32 public immutable dstEid;
 
   /// @notice Send library address for outbound messages
-  address public immutable sendLib;
-
-  /// @notice Source endpoint ID for inbound messages
-  uint32 public immutable srcEid;
+  address private immutable sendLib;
 
   /// @notice Receive library address for inbound messages
-  address public immutable receiveLib;
+  address private immutable receiveLib;
 
   /// @notice Mapping from token address to pool address
   mapping(address => address) public tokenPools;
+
+  address private immutable executorAddress;
+
+  /// @notice Array of DVN addresses for message verification
+  address[] private dvnAddresses;
 
   /// @notice Array of all created pool addresses
   address[] public allPools;
@@ -46,36 +57,24 @@ contract PoolFactory is Ownable {
   error InvalidEndpointAddress();
   error InvalidLibraryAddress();
 
-  /// @notice Maximum fee in basis points (10000 = 100%)
-  uint16 public constant MAX_FEE_BASIS_POINTS = 1000; // 10%
-
   /**
    * @notice Constructor to initialize the factory with LayerZero endpoint and library configurations
-   * @param _endpoint The LayerZero endpoint address for cross-chain messaging
-   * @param _dstEid Destination endpoint ID for outbound messages
-   * @param _sendLib Send library address for outbound messages
-   * @param _srcEid Source endpoint ID for inbound messages
-   * @param _receiveLib Receive library address for inbound messages
+   * @param params Struct containing constructor parameters
    */
-  constructor(
-    address _endpoint,
-    uint32 _dstEid,
-    address _sendLib,
-    uint32 _srcEid,
-    address _receiveLib
-  ) Ownable(msg.sender) {
-    if (_endpoint == address(0)) {
+  constructor(PoolFactoryConstructorParams memory params) Ownable(msg.sender) {
+    if (params.endpoint == address(0)) {
       revert InvalidEndpointAddress();
     }
-    if (_sendLib == address(0) || _receiveLib == address(0)) {
+    if (params.sendLib == address(0) || params.receiveLib == address(0)) {
       revert InvalidLibraryAddress();
     }
 
-    endpoint = _endpoint;
-    dstEid = _dstEid;
-    sendLib = _sendLib;
-    srcEid = _srcEid;
-    receiveLib = _receiveLib;
+    endpoint = params.endpoint;
+    dstEid = params.dstEid;
+    sendLib = params.sendLib;
+    receiveLib = params.receiveLib;
+    dvnAddresses = params.dvnAddresses;
+    executorAddress = params.executorAddress;
   }
 
   /**
@@ -101,10 +100,11 @@ contract PoolFactory is Ownable {
       owner: msg.sender,
       treasury: treasury,
       feeBasisPoints: feeBasisPoints,
-      dstEid: dstEid,
+      eid: dstEid,
       sendLib: sendLib,
-      srcEid: srcEid,
-      receiveLib: receiveLib
+      receiveLib: receiveLib,
+      dvnAddresses: dvnAddresses,
+      executorAddress: executorAddress
     });
 
     Pool pool = new Pool(params);
@@ -151,13 +151,5 @@ contract PoolFactory is Ownable {
   function getPoolByIndex(uint256 index) external view returns (address) {
     require(index < allPools.length, "Index out of bounds");
     return allPools[index];
-  }
-
-  /**
-   * @notice Get all pool addresses
-   * @return Array of all pool addresses
-   */
-  function getAllPools() external view returns (address[] memory) {
-    return allPools;
   }
 }

@@ -21,7 +21,7 @@ export const EvmFeesSummary = function ({
   const { data: layerZeroFees, isError: isLayerZeroError } =
     useEstimateLayerZeroFees({
       amount,
-      token,
+      pool,
     });
   const { data: poolFees, isError: isPoolFeeError } = useEstimatePoolFees(pool);
 

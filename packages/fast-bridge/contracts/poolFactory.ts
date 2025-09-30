@@ -1,49 +1,49 @@
 import type { Address, Chain } from "viem";
+import { mainnet, hemi } from "viem/chains";
 
 export const poolFactoryAbi = [
   {
     type: "constructor",
     inputs: [
       {
-        name: "_endpoint",
-        type: "address",
-        internalType: "address",
-      },
-      {
-        name: "_dstEid",
-        type: "uint32",
-        internalType: "uint32",
-      },
-      {
-        name: "_sendLib",
-        type: "address",
-        internalType: "address",
-      },
-      {
-        name: "_srcEid",
-        type: "uint32",
-        internalType: "uint32",
-      },
-      {
-        name: "_receiveLib",
-        type: "address",
-        internalType: "address",
+        name: "params",
+        type: "tuple",
+        internalType: "struct PoolFactoryConstructorParams",
+        components: [
+          {
+            name: "dstEid",
+            type: "uint32",
+            internalType: "uint32",
+          },
+          {
+            name: "endpoint",
+            type: "address",
+            internalType: "address",
+          },
+          {
+            name: "sendLib",
+            type: "address",
+            internalType: "address",
+          },
+          {
+            name: "receiveLib",
+            type: "address",
+            internalType: "address",
+          },
+          {
+            name: "dvnAddresses",
+            type: "address[]",
+            internalType: "address[]",
+          },
+          {
+            name: "executorAddress",
+            type: "address",
+            internalType: "address",
+          },
+        ],
       },
     ],
     stateMutability: "nonpayable",
-  },
-  {
-    type: "function",
-    name: "MAX_FEE_BASIS_POINTS",
-    inputs: [],
-    outputs: [
-      {
-        name: "",
-        type: "uint16",
-        internalType: "uint16",
-      },
-    ],
-    stateMutability: "view",
   },
   {
     type: "function",
@@ -114,20 +114,7 @@ export const poolFactoryAbi = [
       {
         name: "",
         type: "address",
-        internalType: "contract ILayerZeroEndpointV2",
-      },
-    ],
-    stateMutability: "view",
-  },
-  {
-    type: "function",
-    name: "getAllPools",
-    inputs: [],
-    outputs: [
-      {
-        name: "",
-        type: "address[]",
-        internalType: "address[]",
+        internalType: "address",
       },
     ],
     stateMutability: "view",
@@ -198,49 +185,10 @@ export const poolFactoryAbi = [
   },
   {
     type: "function",
-    name: "receiveLib",
-    inputs: [],
-    outputs: [
-      {
-        name: "",
-        type: "address",
-        internalType: "address",
-      },
-    ],
-    stateMutability: "view",
-  },
-  {
-    type: "function",
     name: "renounceOwnership",
     inputs: [],
     outputs: [],
     stateMutability: "nonpayable",
-  },
-  {
-    type: "function",
-    name: "sendLib",
-    inputs: [],
-    outputs: [
-      {
-        name: "",
-        type: "address",
-        internalType: "address",
-      },
-    ],
-    stateMutability: "view",
-  },
-  {
-    type: "function",
-    name: "srcEid",
-    inputs: [],
-    outputs: [
-      {
-        name: "",
-        type: "uint32",
-        internalType: "uint32",
-      },
-    ],
-    stateMutability: "view",
   },
   {
     type: "function",
@@ -343,22 +291,7 @@ export const poolFactoryAbi = [
   },
   {
     type: "error",
-    name: "InvalidFee",
-    inputs: [],
-  },
-  {
-    type: "error",
     name: "InvalidLibraryAddress",
-    inputs: [],
-  },
-  {
-    type: "error",
-    name: "InvalidTokenAddress",
-    inputs: [],
-  },
-  {
-    type: "error",
-    name: "InvalidTreasuryAddress",
     inputs: [],
   },
   {
@@ -393,9 +326,8 @@ export const poolFactoryAbi = [
 export const getPoolFactoryAddress = function (chainId: number) {
   // Contract addresses by chain ID
   const addresses: Record<Chain["id"], Address> = {
-    // TODO Add Ethereum and Hemi addresses
-    // [mainnet.id]: "0x5fFD0EAdc186AF9512542d0d5e5eAFC65d5aFc5B",
-    // [hemi.id]: "0xf14A494Fb66927Df0b1495E5F09b410e5D8517C3",
+    [mainnet.id]: "0xc5766faf6f0d2aed5c4e6e7a4a11fb26b92e0bec",
+    [hemi.id]: "0xe91d925ec1275cac3bc0072549a0c298733a7797",
   } as const;
   const address = addresses[chainId];
   if (!address) {

@@ -29,6 +29,7 @@ import { validateBridgeParams } from "../../utils/validation";
 
 import { getDstEid, getPoolAddress } from "../public/poolFactory";
 import { prepareSendParams } from "../../utils/pool";
+import { getFeeBasisPoints, quoteSend } from "actions/public/pool";
 
 // Check user balance and allowance
 const checkUserBalance = async function ({
@@ -174,22 +175,27 @@ const runBridgeToken = (params: BridgeParams) =>
         }
       }
 
-      const dstEid = await getDstEid(publicClient, { poolFactoryAddress });
+      const [dstEid, feeBasisPoints] = await Promise.all([
+        getDstEid(publicClient, { poolFactoryAddress }),
+        getFeeBasisPoints(publicClient, { poolAddress }),
+      ]);
 
       // Prepare send parameters
       const sendParam = prepareSendParams({
         amount,
         dstEid,
+        feeBasisPoints,
         toAddress,
       });
 
       // Quote the send operation to get fees
       const [messagingFee, nativeTokenBalance] = await Promise.all([
-        readContract(publicClient, {
-          abi: poolAbi,
-          address: poolAddress,
-          args: [sendParam, false],
-          functionName: "quoteSend",
+        quoteSend(publicClient, {
+          amount,
+          chainId: sourceChainId,
+          feeBasisPoints,
+          toAddress,
+          tokenAddress,
         }),
         // Check user's token balance again, we need to compare it against messaging fee
         getBalance(publicClient, {
@@ -268,12 +274,14 @@ export const bridgeToken = function (
 export const encodeBridgeSend = function ({
   amount,
   dstEid,
+  feeBasisPoints,
   messagingFee,
   refundAddress,
   toAddress,
 }: {
   amount: bigint;
   dstEid: number;
+  feeBasisPoints: number;
   messagingFee: { lzTokenFee: bigint; nativeFee: bigint };
   refundAddress: Address;
   toAddress: Address;
@@ -281,6 +289,7 @@ export const encodeBridgeSend = function ({
   const sendParam = prepareSendParams({
     amount,
     dstEid,
+    feeBasisPoints,
     toAddress,
   });
 

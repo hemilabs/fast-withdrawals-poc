@@ -8,6 +8,16 @@ export const poolAbi = [
         internalType: "struct PoolConstructorParams",
         components: [
           {
+            name: "feeBasisPoints",
+            type: "uint16",
+            internalType: "uint16",
+          },
+          {
+            name: "eid",
+            type: "uint32",
+            internalType: "uint32",
+          },
+          {
             name: "token",
             type: "address",
             internalType: "address",
@@ -28,27 +38,22 @@ export const poolAbi = [
             internalType: "address",
           },
           {
-            name: "feeBasisPoints",
-            type: "uint16",
-            internalType: "uint16",
-          },
-          {
-            name: "dstEid",
-            type: "uint32",
-            internalType: "uint32",
-          },
-          {
             name: "sendLib",
             type: "address",
             internalType: "address",
           },
           {
-            name: "srcEid",
-            type: "uint32",
-            internalType: "uint32",
+            name: "receiveLib",
+            type: "address",
+            internalType: "address",
           },
           {
-            name: "receiveLib",
+            name: "dvnAddresses",
+            type: "address[]",
+            internalType: "address[]",
+          },
+          {
+            name: "executorAddress",
             type: "address",
             internalType: "address",
           },
@@ -1552,12 +1557,27 @@ export const poolAbi = [
   },
   {
     type: "error",
+    name: "InvalidDvnAddresses",
+    inputs: [],
+  },
+  {
+    type: "error",
+    name: "InvalidEid",
+    inputs: [],
+  },
+  {
+    type: "error",
     name: "InvalidEndpointAddress",
     inputs: [],
   },
   {
     type: "error",
     name: "InvalidEndpointCall",
+    inputs: [],
+  },
+  {
+    type: "error",
+    name: "InvalidExecutorAddress",
     inputs: [],
   },
   {

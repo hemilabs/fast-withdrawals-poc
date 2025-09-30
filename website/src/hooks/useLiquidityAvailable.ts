@@ -1,20 +1,29 @@
 import { useQuery } from "@tanstack/react-query";
-import { getLiquidityAvailable } from "fast-bridge/actions";
+import { getPoolFactoryAddress } from "fast-bridge";
+import { getLiquidityAvailable, getPoolAddress } from "fast-bridge/actions";
 import type { PoolToken } from "types/poolToken";
 import { createPublicClient, http } from "viem";
-import { hemi } from "viem/chains";
+import { mainnet } from "viem/chains";
 
 export const useLiquidityAvailable = (pool: PoolToken) =>
   useQuery({
     async queryFn() {
       const publicClient = createPublicClient({
-        chain: hemi,
+        chain: mainnet,
         transport: http(),
       });
 
-      return getLiquidityAvailable(publicClient, {
-        poolAddress: pool.poolAddress,
-      });
+      const poolFactoryAddress = getPoolFactoryAddress(mainnet.id);
+
+      return getPoolAddress(publicClient, {
+        tokenAddress:
+          pool.token.extensions!.bridgeInfo[mainnet.id].tokenAddress,
+        poolFactoryAddress,
+      }).then((poolAddress) =>
+        getLiquidityAvailable(publicClient, {
+          poolAddress,
+        }),
+      );
     },
     queryKey: ["liquidityAvailable", pool.poolAddress],
   });

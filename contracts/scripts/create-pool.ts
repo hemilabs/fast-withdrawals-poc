@@ -118,10 +118,13 @@ async function createPool(config: PoolConfig) {
   try {
     // Call createPool function
     console.log("📡 Creating pool...");
+
     const hash = await walletClient.writeContract({
       address: config.factoryAddress,
       abi: PoolFactoryABI,
       functionName: "createPool",
+      // needed because estimation fails with the default value
+      gas: BigInt(5_000_000),
       args: [config.tokenAddress, treasuryAddress, config.feeBasisPoints],
     });
 

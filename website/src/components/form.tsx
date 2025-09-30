@@ -167,7 +167,9 @@ export const Form = function ({ poolTokens }: { poolTokens: PoolToken[] }) {
             label="Receive"
             onChange={updateFromInput}
             token={toToken}
-            tokenSelector={<TokenSelectorReadOnly token={toToken} />}
+            tokenSelector={
+              <TokenSelectorReadOnly token={toToken} logoVersion="L1" />
+            }
             value={calculateReceiveAmount()}
           />
           {isSuccess ? (

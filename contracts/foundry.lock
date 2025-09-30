@@ -1,4 +1,10 @@
 {
+  "lib/LayerZero-v2": {
+    "rev": "4645b5795185a196713263311f76a497a3267dcc"
+  },
+  "lib/devtools": {
+    "rev": "5268e9c0c70106a9b74ceaf519ffaa41d8b503ec"
+  },
   "lib/forge-std": {
     "tag": {
       "name": "v1.10.0",
@@ -15,6 +21,12 @@
     "tag": {
       "name": "v0.4.0",
       "rev": "cbce1e00305e943aa1661d43f41e5ac72c662b07"
+    }
+  },
+  "lib/solidity-bytes-utils": {
+    "tag": {
+      "name": "v0.8.4",
+      "rev": "f4413cd6137b78403e3a1156bee6aceab46b46fa"
     }
   }
 }
