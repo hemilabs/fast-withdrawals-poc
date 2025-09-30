@@ -25,7 +25,7 @@ import { useEstimatePoolFees } from "hooks/useEstimatePoolFees";
 
 const ResetButton = ({ onClick }: { onClick: () => void }) => (
   <Button onClick={onClick} type="button" variant="primary">
-    Try another
+    Bridge More
   </Button>
 );
 
