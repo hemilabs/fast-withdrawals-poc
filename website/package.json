@@ -3,6 +3,7 @@
   "version": "1.0.0",
   "scripts": {
     "build": "tsc -b && vite build",
+    "postbuild": "cp dist/index.html dist/404.html",
     "dev": "vite",
     "prepreview": "npm run build",
     "preview": "vite preview"
