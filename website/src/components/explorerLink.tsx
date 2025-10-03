@@ -1,4 +1,4 @@
-import { shorten } from "crypto-shortener";
+import { formatTxHash } from "utils/format";
 import { type Hash } from "viem";
 
 type Props = {
@@ -14,7 +14,7 @@ export const ExplorerLink = ({ hash }: Props) => (
       rel="noopener noreferrer"
       target="_blank"
     >
-      {shorten(hash, { length: 4, prefixes: ["0x"] })}
+      {formatTxHash(hash)}
     </a>
   </div>
 );

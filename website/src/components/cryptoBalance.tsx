@@ -1,5 +1,8 @@
 import { DisplayAmount } from "components/displayAmount";
-import { useTokenBalance, useNativeTokenBalance } from "hooks/useBalance";
+import {
+  useAccountTokenBalance,
+  useNativeTokenBalance,
+} from "hooks/useBalance";
 import Skeleton from "react-loading-skeleton";
 import { type Token } from "types/token";
 import { isNativeToken } from "utils/nativeToken";
@@ -15,7 +18,7 @@ const RenderCryptoBalance = ({
   status,
   token,
 }: Props & { balance: bigint } & Pick<
-    ReturnType<typeof useTokenBalance>,
+    ReturnType<typeof useAccountTokenBalance>,
     "fetchStatus" | "status"
   >) => (
   <>
@@ -56,7 +59,10 @@ const TokenBalance = function ({ token }: Props<Token>) {
     data: balance = BigInt(0),
     fetchStatus,
     status,
-  } = useTokenBalance(token.chainId, token.address);
+  } = useAccountTokenBalance({
+    chainId: token.chainId,
+    tokenAddress: token.address,
+  });
   return (
     <RenderCryptoBalance
       balance={balance}

@@ -1,9 +1,9 @@
 import { getTargetChainId } from "fast-bridge";
-import { useTokenBalance } from "hooks/useBalance";
-import { useBridgeState } from "hooks/useBridgeState";
+import { useAccountTokenBalance } from "hooks/useBalance";
+import type { TunnelActions, TunnelState } from "hooks/useBridgeState";
 import { useBridgeToken } from "hooks/useBridgeToken";
 import { useNeedsApproval } from "hooks/useNeedsApproval";
-import { type FormEvent, useState } from "react";
+import { type ActionDispatch, type FormEvent, useState } from "react";
 import type { PoolToken } from "types/poolToken";
 import { getToken, parseTokenUnits } from "utils/token";
 import { validateSubmit } from "utils/validateSubmit";
@@ -29,8 +29,15 @@ const ResetButton = ({ onClick }: { onClick: () => void }) => (
   </Button>
 );
 
-export const Form = function ({ poolTokens }: { poolTokens: PoolToken[] }) {
-  const [state, dispatch] = useBridgeState();
+export const Form = function ({
+  dispatch,
+  poolTokens,
+  state,
+}: {
+  dispatch: ActionDispatch<[action: TunnelActions]>;
+  poolTokens: PoolToken[];
+  state: TunnelState;
+}) {
   const [transactionHash, setTransactionHash] = useState<Hash | undefined>(
     undefined,
   );
@@ -52,10 +59,10 @@ export const Form = function ({ poolTokens }: { poolTokens: PoolToken[] }) {
     amount,
     spender: selectedPool.poolAddress,
   });
-  const { data: walletTokenBalance } = useTokenBalance(
-    fromToken.chainId,
-    fromToken.address,
-  );
+  const { data: walletTokenBalance } = useAccountTokenBalance({
+    chainId: fromToken.chainId,
+    tokenAddress: fromToken.address,
+  });
 
   const handleReset = function () {
     setTransactionHash(undefined);

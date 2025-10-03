@@ -1,4 +1,4 @@
-import { useTokenBalance } from "hooks/useBalance";
+import { useAccountTokenBalance } from "hooks/useBalance";
 import { type Token } from "types/token";
 import { formatUnits } from "viem";
 
@@ -13,10 +13,10 @@ export const SetMaxEvmBalance = function ({
   onSetMaxBalance,
   token,
 }: Props<Token>) {
-  const { data: walletTokenBalance } = useTokenBalance(
-    token.chainId,
-    token.address,
-  );
+  const { data: walletTokenBalance } = useAccountTokenBalance({
+    chainId: token.chainId,
+    tokenAddress: token.address,
+  });
 
   const handleClick = function () {
     const maxBalance = formatUnits(walletTokenBalance!, token.decimals);

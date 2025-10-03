@@ -1,7 +1,11 @@
 import type { Address, Chain } from "viem";
 
 type Extensions = {
-  bridgeInfo: Record<Chain["id"], { tokenAddress: Address }>;
+  bridgeInfo?: {
+    [keyof: string]: {
+      tokenAddress?: Address;
+    };
+  };
   l1LogoURI: string;
   // Use this to map which symbol should be used to map prices
   priceSymbol?: string;

@@ -19,6 +19,7 @@
     "react": "19.1.1",
     "react-dom": "19.1.1",
     "react-loading-skeleton": "3.5.0",
+    "react-router": "7.9.3",
     "smart-round": "3.0.1",
     "tiny-fetch-json": "1.0.0",
     "viem": "2.37.8",

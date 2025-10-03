@@ -9,7 +9,7 @@ const compilationError = function (_: never): never {
   throw new Error("Missing implementation of action in reducer");
 };
 
-type TunnelState = {
+export type TunnelState = {
   fromInput: string;
   fromNetworkId: Chain["id"];
 };
@@ -24,9 +24,12 @@ type Payload<T> = { payload: T };
 type ResetStateAfterOperation = Action<"resetStateAfterOperation"> & NoPayload;
 type UpdateFromInput = Action<"updateFromInput"> & Payload<string>;
 
-type Actions = ResetStateAfterOperation | UpdateFromInput;
+export type TunnelActions = ResetStateAfterOperation | UpdateFromInput;
 
-const reducer = function (state: TunnelState, action: Actions): TunnelState {
+const reducer = function (
+  state: TunnelState,
+  action: TunnelActions,
+): TunnelState {
   const { type } = action;
   switch (type) {
     case "resetStateAfterOperation":

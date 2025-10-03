@@ -6,7 +6,7 @@ import { type Token } from "types/token";
 import { type WalletClient } from "viem";
 import { useAccount, useWalletClient } from "wagmi";
 
-import { useNativeTokenBalance, useTokenBalance } from "./useBalance";
+import { useNativeTokenBalance, useAccountTokenBalance } from "./useBalance";
 import { useUpdateNativeBalanceAfterReceipt } from "./useInvalidateNativeBalanceAfterReceipt";
 
 export const useBridgeToken = function ({
@@ -24,10 +24,10 @@ export const useBridgeToken = function ({
   const { data: walletClient } = useWalletClient();
 
   // source chain
-  const { queryKey: tokenBalanceQueryKey } = useTokenBalance(
-    fromToken.chainId,
-    fromToken.address,
-  );
+  const { queryKey: tokenBalanceQueryKey } = useAccountTokenBalance({
+    chainId: fromToken.chainId,
+    tokenAddress: fromToken.address,
+  });
 
   const updateNativeBalanceAfterFees = useUpdateNativeBalanceAfterReceipt(
     fromToken.chainId,

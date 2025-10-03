@@ -20,13 +20,16 @@ export const useNativeTokenBalance = function (
   });
 };
 
-export const useTokenBalance = function (
-  chainId: Token["chainId"],
-  tokenAddress: string,
-) {
-  const { address, isConnected } = useAccount();
-
-  return useReadContract({
+export const useTokenBalance = ({
+  address,
+  chainId,
+  tokenAddress,
+}: {
+  address: Address | undefined;
+  chainId: Token["chainId"];
+  tokenAddress: string;
+}) =>
+  useReadContract({
     abi: erc20Abi,
     address: tokenAddress as Address,
     // @ts-expect-error if address is not defined, the query is disabled
@@ -34,11 +37,19 @@ export const useTokenBalance = function (
     chainId,
     functionName: "balanceOf",
     query: {
-      enabled:
-        isConnected &&
-        !!address &&
-        isAddress(address) &&
-        isAddress(tokenAddress),
+      enabled: !!address && isAddress(address) && isAddress(tokenAddress),
     },
   });
-};
+
+export const useAccountTokenBalance = ({
+  chainId,
+  tokenAddress,
+}: {
+  chainId: Token["chainId"];
+  tokenAddress: string;
+}) =>
+  useTokenBalance({
+    address: useAccount().address,
+    chainId,
+    tokenAddress,
+  });

@@ -1,18 +1,23 @@
-import tokenList from "@hemilabs/token-list";
 import { useQuery } from "@tanstack/react-query";
 import { getPoolFactoryAddress } from "fast-bridge";
 import { getAllPools, getPoolToken } from "fast-bridge/actions";
 import type { PoolToken } from "types/poolToken";
 import type { Token } from "types/token";
-import { createPublicClient, http, isAddress, isAddressEqual } from "viem";
-import { hemi } from "viem/chains";
+import { tokenList } from "utils/tokens";
+import {
+  createPublicClient,
+  http,
+  isAddress,
+  isAddressEqual,
+  type Chain,
+} from "viem";
 
-export const usePoolTokens = function () {
+export const usePoolTokens = function (chain: Chain) {
   return useQuery({
     async queryFn() {
-      const poolFactoryAddress = getPoolFactoryAddress(hemi.id);
+      const poolFactoryAddress = getPoolFactoryAddress(chain.id);
       const publicClient = createPublicClient({
-        chain: hemi,
+        chain: chain,
         transport: http(),
       });
 
@@ -23,8 +28,7 @@ export const usePoolTokens = function () {
             (tokenAddress) =>
               ({
                 poolAddress: pool,
-                // @ts-expect-error it infers tokenAddress as string, but it's Address
-                token: tokenList.tokens.find(
+                token: tokenList.find(
                   (t) =>
                     isAddress(t.address) &&
                     isAddressEqual(t.address, tokenAddress),
@@ -34,6 +38,6 @@ export const usePoolTokens = function () {
         ),
       );
     },
-    queryKey: ["bridgable-tokens"],
+    queryKey: ["bridgable-tokens", chain.id],
   });
 };
