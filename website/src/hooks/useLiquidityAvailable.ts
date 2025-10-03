@@ -17,7 +17,7 @@ export const useLiquidityAvailable = (pool: PoolToken) =>
 
       return getPoolAddress(publicClient, {
         tokenAddress:
-          pool.token.extensions!.bridgeInfo[mainnet.id].tokenAddress,
+          pool.token.extensions!.bridgeInfo![mainnet.id].tokenAddress!,
         poolFactoryAddress,
       }).then((poolAddress) =>
         getLiquidityAvailable(publicClient, {

@@ -36,7 +36,7 @@ export const getToken = function (pool: PoolToken): [Token, Token] {
   // to build the "toToken", just use the bridgeInfo
   const toToken: Token = {
     ...fromToken,
-    address: fromToken.extensions!.bridgeInfo[targetChainId].tokenAddress,
+    address: fromToken.extensions!.bridgeInfo![targetChainId].tokenAddress!,
     chainId: targetChainId,
   };
   return [fromToken, toToken];
