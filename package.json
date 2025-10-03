@@ -2,6 +2,7 @@
   "name": "fast-withdrawals-poc",
   "version": "1.0.0",
   "description": "Proof of concept for enabling fast withdrawals from Hemi to Ethereum using LayerZero",
+  "homepage": "https://hemilabs.github.io",
   "license": "MIT",
   "author": "Gonzalo D'Elia <gonzalo@hemi.xyz>",
   "repository": {
