@@ -19,3 +19,13 @@ npm install
 # solidity dependencies
 cd contracts && forge install
 ```
+
+## 📁 Directory Structure
+
+```
+│── contracts/ # Contains the necessary Smart Contracts
+│
+│── packages/ # Contains a TS package that integrates the UI with the published contracts
+│
+│── website/ # Contains a simple UI to use the Fast Bridge PoC
+```
